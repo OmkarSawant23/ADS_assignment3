@@ -91,20 +91,19 @@ cr_lnd_yw, cr_lnd_cw = read_world_bank_csv("API_AG.YLD.CREL.KG_DS2_en_csv_v2_629
 
 #print(ar_lnd_cw[1995])
 ###############Clustering   ######################################
+ar_cluster =  pd.DataFrame()
+ar_cluster_1 = pd.DataFrame()
+ar_cluster_1["fert"] = fert_data_cw.loc[:,1995]
+ar_cluster_1["arable"] = cr_lnd_cw.loc[:,1995]
+ar_cluster_1["fert_2000"] = fert_data_cw.loc[:,2020]
+ar_cluster_1["arable_2000"] = cr_lnd_cw.loc[:,2020]
+ar_cluster_1 = ar_cluster_1.dropna()
 
-ar_cluster = pd.DataFrame()
-ar_cluster["fert"] = fert_data_cw.loc[:,1995]
-ar_cluster["arable"] = cr_lnd_cw.loc[:,1995]
-ar_cluster["fert_2000"] = fert_data_cw.loc[:,2020]
-ar_cluster["arable_2000"] = cr_lnd_cw.loc[:,2020]
-ar_cluster = ar_cluster.dropna()
-
-print(ar_cluster)
-df_norm, df_min, df_max = ct.scaler(ar_cluster)
+df_norm, df_min, df_max = ct.scaler(ar_cluster_1)
 ncluster = 3
 
 for ic in range(2, 11):
-    score = one_silhoutte(ar_cluster, ic)
+    score = one_silhoutte(ar_cluster_1, ic)
     print(f"The silhouette score for {ic: 3d} is {score: 7.4f}")
 kmeans = cluster.KMeans(n_clusters=ncluster, n_init=20)
 # Fit the data, results are stored in the kmeans object
@@ -120,47 +119,42 @@ xkmeans = cen[:, 0]
 ykmeans = cen[:, 1]
 
 # extract x and y values of data points
-x1 = ar_cluster["fert"]
-y1 = ar_cluster["arable"]
-x2 = ar_cluster["fert_2000"]
-y2 = ar_cluster["arable_2000"]
+x1 = ar_cluster_1["fert"]
+y1 = ar_cluster_1["arable"]
+x2 = ar_cluster_1["fert_2000"]
+y2 = ar_cluster_1["arable_2000"]
 plt.figure(figsize=(8.0, 8.0))
 # plot data with kmeans cluster number
 cm = plt.colormaps["Paired"]
-fig, axs = plt.subplots(1, 2, figsize=(12, 5)) 
-scatter1 = axs[0].scatter(x1, y1, 10, labels, marker="o", cmap=cm)
-axs[0].scatter(xkmeans, ykmeans, 45, "k", marker="d")
-axs[0].scatter(xkmeans, ykmeans, 45, "k", marker="d")
-axs[0].set_xlabel("Fertilizer(kg)")
-axs[0].set_ylabel("Cereal")
-axs[0].set_title("1995")
-axs[0].set_ylim(0, 30000)
-axs[0].grid(True)
-scatter2 = axs[1].scatter(x2, y2, s=10, c=labels, marker="o", cmap=cm)
-axs[1].scatter(xkmeans, ykmeans, 45, "k", marker="d")
-axs[1].scatter(xkmeans, ykmeans, 45, "k", marker="d")
-axs[1].set_xlabel("Fertilizer(kg)")
-axs[1].set_ylabel("Cereal")
-axs[1].set_title("2022")
-axs[1].set_ylim(0, 30000)
-axs[1].grid(True)
-# show cluster centres
-#plt.scatter(xkmeans, ykmeans, 45, "k", marker="d")
-#plt.scatter(xkmeans, ykmeans, 45, "y", marker="+")
-#plt.title("China Arable land % vs fertilizer consumption(kg per hectare of arable land)")
-#plt.xlabel("Fertilizer consumption(kg)")
-#plt.ylabel("arable land %")
+fig, c_f = plt.subplots(1, 2, figsize=(12, 5)) 
+scatter1 = c_f[0].scatter(x1, y1, 10, labels, marker="o", cmap=cm)
+c_f[0].scatter(xkmeans, ykmeans, 45, "k", marker="d")
+c_f[0].scatter(xkmeans, ykmeans, 45, "k", marker="+")
+c_f[0].set_xlabel("Fertilizer(kg)")
+c_f[0].set_ylabel("Cereal")
+c_f[0].set_title("Cereal yield vs fertilizer usage (1995)")
+c_f[0].set_ylim(0, 30000)
+c_f[0].grid(True)
+scatter2 = c_f[1].scatter(x2, y2, s=10, c=labels, marker="o", cmap=cm)
+c_f[1].scatter(xkmeans, ykmeans, 45, "k", marker="d")
+c_f[1].scatter(xkmeans, ykmeans, 45, "k", marker="+")
+c_f[1].set_xlabel("Fertilizer(kg)")
+c_f[1].set_ylabel("Cereal")
+c_f[1].set_title("Cereal yield vs fertilizer usage (2022)")
+c_f[1].set_ylim(0, 30000)
+c_f[1].grid(True)
+
 #####################fitting############################
-
-
+ar_cluster["fert_k"] = fert_data_yw["China"]
+ar_cluster = ar_cluster.dropna()
 plt.figure()
 ar_cluster["Year"] = ar_cluster.index
 
 
-param, covar = opt.curve_fit(poly, ar_cluster["Year"], ar_cluster["fert"])
+param, covar = opt.curve_fit(poly, ar_cluster["Year"], ar_cluster["fert_k"])
 ar_cluster["fit"] = poly(ar_cluster["Year"], *param)
 
-ar_cluster.plot("Year", ["fert", "fit"])
+ar_cluster.plot("Year", ["fert_k", "fit"])
 
 
 ############Forcast###############
@@ -173,7 +167,7 @@ up = forecast + sigma
 ar_cluster["fit"] = poly(ar_cluster["Year"], *param)
 
 plt.figure()
-plt.plot(ar_cluster["Year"], ar_cluster["fert"], label="Fertilizer consumption")
+plt.plot(ar_cluster["Year"], ar_cluster["fert_k"], label="Fertilizer consumption")
 plt.plot(year, forecast, label="forecast")
 plt.title("China fertilizer consumption(kg per hectare of arable land)")
 plt.xlabel("Year")
