@@ -122,7 +122,7 @@ def clustering_data(fert_data_cw, cr_lnd_cw, ncluster, year_1, year_2):
     # for doing subplots.
     plt.figure(figsize=(8.0, 8.0))
     c_m = plt.colormaps["Paired"]
-    fig, c_f = plt.subplots(1, 2, figsize=(12, 5))
+    _, c_f = plt.subplots(1, 2, figsize=(12, 5))
 
     # First scatter subplot.
     scatter1 = c_f[0].scatter(x_1, y_1, 10, labels, marker="o", cmap=c_m)
@@ -272,7 +272,7 @@ def forcast_data(fert_data_yw, ar_lnd_yw, country):
     forecast = poly(year, *param_1)
     sigma = err.error_prop(year, poly, param_1, covar_1)
     low = forecast - sigma
-    up = forecast + sigma
+    u_p = forecast + sigma
 
     # plotting the figure.
     plt.figure()
@@ -285,7 +285,7 @@ def forcast_data(fert_data_yw, ar_lnd_yw, country):
     plt.legend()
 
     # plot uncertainty range
-    plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+    plt.fill_between(year, low, u_p, color="yellow", alpha=0.7)
     # saving the figure.
     plt.savefig("forecast2.png", dpi=300)
 
@@ -293,28 +293,28 @@ def forcast_data(fert_data_yw, ar_lnd_yw, country):
     plt.show()
 
 
-def poly(x, a, b, c, d):
+def poly(x_k, a_k, b_k, c_k, d_k):
     """ Calulates polynominal"""
 
-    x = x - 1995
-    f = a + b*x + c*x**2 + d*x**3
+    x_k = x_k - 1995
+    f_poly = a_k + b_k*x_k + c_k*x_k**2 + d_k*x_k**3
 
-    return f
+    return f_poly
 
 
-def one_silhoutte(xy, n):
+def one_silhoutte(x_y, n_p):
     """ Calculates silhoutte score for n clusters """
 
     # set up the clusterer with the number of expected clusters
-    kmeans = cluster.KMeans(n_clusters=n, n_init=20)
+    kmeans = cluster.KMeans(n_clusters=n_p, n_init=20)
 
     # Fit the data, results are stored in the kmeans object
-    kmeans.fit(xy)     # fit done on x,y pairs
+    kmeans.fit(x_y)     # fit done on x,y pairs
 
     labels = kmeans.labels_
 
     # calculate the silhoutte score
-    score = (skmet.silhouette_score(xy, labels))
+    score = (skmet.silhouette_score(x_y, labels))
 
     return score
 
